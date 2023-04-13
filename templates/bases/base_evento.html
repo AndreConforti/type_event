@@ -23,8 +23,8 @@
                         Empresa
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="">Criar novo evento</a></li>
-                        <li><a class="dropdown-item" href="">Gerenciar eventos</a></li>
+                        <li><a href="{% url 'eventos:novo_evento' %}" class="dropdown-item" href="">Criar novo evento</a></li>
+                        <li><a href="{% url 'eventos:gerenciar_evento' %}" class="dropdown-item" href="">Gerenciar eventos</a></li>
                     </ul>
                 </li>
                 
