@@ -5,10 +5,13 @@ from django.contrib import messages
 from django.contrib.messages import constants
 from django.urls import reverse
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from .models import Evento
-import csv, os
+from .models import Evento, Certificado
+import csv, os, sys
 from secrets import token_urlsafe
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 
 
 # A view novo_evento, só pode ser acessada por usuário logado. 
@@ -111,7 +114,7 @@ def gerar_csv(request, id):
     # para gerar um csv com todos os participantes, é necessário buscar todos eles
     participantes = evento.participantes.all()
 
-    # token vai gerar um nome aleatório de 6 caracteres, toda vez que for gerado um arquivo .csv
+    # token vai gerar um nome aleatório de 8 bites, toda vez que for gerado um arquivo .csv
     token = f"{token_urlsafe(6)}.csv"
     # mostra o caminho onde vai ser armazenado esse arquivo, junto com o seu nome
     path = os.path.join(settings.MEDIA_ROOT, token)
@@ -124,3 +127,87 @@ def gerar_csv(request, id):
     
     return redirect(f"/media/{token}")
     
+
+def certificados_evento(request, id):
+    # buscar o evento no banco
+    evento = get_object_or_404(Evento, id=id)
+    # verifica se o evento pertence ao criador do evento
+    if not evento.criador == request.user:
+        raise Http404('Esse evento não é seu')
+    if request.method == "GET":
+        # verifica a quantidade de certificados gerados
+        # subtraindo o total de certificados menos os certificados desse evento
+        qtd_certificados = evento.participantes.all().count() - Certificado.objects.filter(evento=evento).count()
+        return render(request, 'certificados_evento.html', {'qtd_certificados': qtd_certificados,
+                                                            'evento': evento,})
+    
+
+def gerar_certificado(request, id):
+        # buscando na tabela Evento pelo id passado como parâmetro
+    # se não encontrar, devolva uma "página não encontrada" 
+    evento = get_object_or_404(Evento,id=id)
+    # verifica se o evento pertence ao criador do evento
+    if not evento.criador == request.user:
+        raise Http404('Esse evento não é seu')
+    
+    path_template = os.path.join(settings.BASE_DIR, 'templates/static/evento/img/template_certificado.png')
+    path_fonte = os.path.join(settings.BASE_DIR, 'templates/static/fontes/arimo.ttf')
+
+    for participante in evento.participantes.all():
+        # TODO validar se o certificado já foi gerado
+
+        # abre a imagem
+        img = Image.open(path_template) 
+        # cria uma variável para escrever na imagem
+        draw = ImageDraw(img)
+        # para utilizar uma fonte na imagem, é preciso passar o caminho e o tamanho da fonte
+        fonte_nome = ImageFont.truetype(path_fonte, 80)
+        fonte_info = ImageFont.truetype(path_fonte, 30)
+
+        # é preciso passar as coordenadas em forma de tupla, 
+        # depois o texto a ser digitado, 
+        # depois a fonte a ser utilizada
+        # e por último a cor da fonte em forma de tupla
+        draw.text((230, 651), f"{participante.username}", font=fonte_nome, fill=(0, 0, 0))
+        draw.text((761, 782), f"{evento.nome}", font=fonte_info, fill=(0, 0, 0))
+        draw.text((816, 849), f"{evento.carga_horaria}", font=fonte_info, fill=(0, 0, 0))
+
+        # cria uma variável para salvar essa imagem para manipular de acordo com as necessidades
+        output = BytesIO()
+        # é preciso passar o caminho no HD onde será salvo, nesse caso, dentro da variável output
+        # depois o formato da imagem
+        # depois a qualidade da imagem
+        img.save(output, format="PNG", quality=100)
+        # aponta para o início do arquivo
+        output.seek(0)
+        # agora é preciso converter essa imagem em um arquivo que o Django compreende
+        # existem dois tipos de arquivo  que o Django utiliza: InMemoryUploadedFile e TemporaryUploadedFile
+        # para finalizar é preciso criar a imagem final passando:
+        # o arquivo, 
+        # tipo do campo, 
+        # nome gerado com função que gera um nome aleatório de 8 bites, 
+        # tipo de imagem
+        # tamanho, que recebe a função getsizeof, que recebe o tamanho de outoput e retorna o tamanho dele mesmo
+        # charset, se fosse um texto, poderia ser o UTF-8, mas como é imagem, não precisa, então None
+        img_final = InMemoryUploadedFile(
+                                output,
+                                'Imagefield',
+                                f'{token_urlsafe(8)}.png',
+                                'image/jpeg',
+                                sys.getsizeof(output),
+                                None
+                                )
+        certificado_gerado = Certificado(
+                            certificado=img_final,
+                            participante=participante,
+                            evento=evento
+                            )
+        certificado_gerado.save()
+    messages.add_message(request, constants.SUCCESS, 'Certificados gerados com sucesso!')
+    return redirect(reverse('eventos:certificados_evento', kwargs={'id':id}))
+
+
+
+
+
+

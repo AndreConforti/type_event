@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Evento(models.Model):
     criador = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True)
     nome = models.CharField(max_length=200)
@@ -18,3 +19,11 @@ class Evento(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class Certificado(models.Model):
+    certificado = models.ImageField(upload_to="certificados")
+    # todo certificado vai se de um participante
+    participante = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    # todo certificado vai se de um evento
+    evento = models.ForeignKey(Evento, on_delete=models.DO_NOTHING)
