@@ -6,7 +6,7 @@ Nessa plataforma será possível:
 - realizar a inscrição em um evento que já foi cadastrado;
 - gerar certificados pra quem participou de algum evento;
 - um usuário autorizado, poderá gerar certificados para um evento que foi cadastrado por ele;
-- criar convites;
+
 
 Este é um projeto que estou criando durante um evento organizado pelo canal Pythonando no YouTube.
 
