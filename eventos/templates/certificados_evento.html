@@ -37,9 +37,13 @@
         <hr>
 
         <div class="row">
-            <h5>{{qtd_certificados}} Certificados para serem gerados</h5>    
+            {% if qtd_certificados <= 0 %}
+                <h5>Não há certificados para serem gerados</h5>    
+            {% else %}
+                <h5>{{qtd_certificados}} Certificados para serem gerados</h5> 
+            {% endif %}   
             {% if qtd_certificados > 0 %}            
-                <a href="#" class="btn-principal link" style="width: 40%">GERAR TODOS OS CERTIFICADOS</a>
+                <a href="{% url 'eventos:gerar_certificado' evento.id %}" class="btn-principal link" style="width: 40%">GERAR TODOS OS CERTIFICADOS</a>
             {% endif %}        
         </div>
         <hr>
@@ -47,8 +51,9 @@
         <div class="row">
             <h5>Procurar certificado</h5>
             <br>
-            <form action="" method="">
-                <input type="email" class="form-control" placeholder="Digite o e-mail" name="email">{% csrf_token %}
+            <form action="{% url 'eventos:procurar_certificado' evento.id %}" method="POST">
+                {% csrf_token %}
+                <input type="email" class="form-control" placeholder="Digite o e-mail" name="email">
                 <br>
                 <input type="submit" value="BUSCAR" class="btn btn-primary">
             </form>

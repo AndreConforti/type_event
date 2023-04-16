@@ -6,6 +6,7 @@ from django.contrib.messages import constants
 from django.urls import reverse
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.paginator import Paginator
 
 from .models import Evento, Certificado
 import csv, os, sys
@@ -97,10 +98,16 @@ def participantes_evento(request, id):
         raise Http404('Esse evento não é seu')
 
     if request.method == "GET":
+        data = {}
+        data['evento'] = evento
         # o evento tem o campo participantes, então é só acessá-lo
-        participantes = evento.participantes.all()[:3]
-        return render(request, 'participantes_evento.html', {'evento': evento,
-                                                             'participantes':participantes,})
+        data['participantes'] = evento.participantes.all()
+        all = evento.participantes.all()
+        # seleciona quantos participantes vão ser mostrados em cada página
+        paginator = Paginator(all, 2)
+        pages = request.GET.get('page')
+        data['paginas'] = paginator.get_page(pages)
+        return render(request, 'participantes_evento.html', data)
 
 
 def gerar_csv(request, id):
@@ -143,7 +150,7 @@ def certificados_evento(request, id):
     
 
 def gerar_certificado(request, id):
-        # buscando na tabela Evento pelo id passado como parâmetro
+    # buscando na tabela Evento pelo id passado como parâmetro
     # se não encontrar, devolva uma "página não encontrada" 
     evento = get_object_or_404(Evento,id=id)
     # verifica se o evento pertence ao criador do evento
@@ -159,7 +166,7 @@ def gerar_certificado(request, id):
         # abre a imagem
         img = Image.open(path_template) 
         # cria uma variável para escrever na imagem
-        draw = ImageDraw(img)
+        draw = ImageDraw.Draw(img)
         # para utilizar uma fonte na imagem, é preciso passar o caminho e o tamanho da fonte
         fonte_nome = ImageFont.truetype(path_fonte, 80)
         fonte_info = ImageFont.truetype(path_fonte, 30)
@@ -168,13 +175,13 @@ def gerar_certificado(request, id):
         # depois o texto a ser digitado, 
         # depois a fonte a ser utilizada
         # e por último a cor da fonte em forma de tupla
-        draw.text((230, 651), f"{participante.username}", font=fonte_nome, fill=(0, 0, 0))
-        draw.text((761, 782), f"{evento.nome}", font=fonte_info, fill=(0, 0, 0))
-        draw.text((816, 849), f"{evento.carga_horaria}", font=fonte_info, fill=(0, 0, 0))
+        draw.text((222, 632), f"{participante.username}", font=fonte_nome, fill=(0, 0, 0))
+        draw.text((761, 775), f"{evento.nome}", font=fonte_info, fill=(0, 0, 0))
+        draw.text((816, 842), f"{evento.carga_horaria} horas.", font=fonte_info, fill=(0, 0, 0))
 
         # cria uma variável para salvar essa imagem para manipular de acordo com as necessidades
         output = BytesIO()
-        # é preciso passar o caminho no HD onde será salvo, nesse caso, dentro da variável output
+        # é preciso passar o caminho onde será salvo, nesse caso, dentro da variável output
         # depois o formato da imagem
         # depois a qualidade da imagem
         img.save(output, format="PNG", quality=100)
@@ -185,7 +192,7 @@ def gerar_certificado(request, id):
         # para finalizar é preciso criar a imagem final passando:
         # o arquivo, 
         # tipo do campo, 
-        # nome gerado com função que gera um nome aleatório de 8 bites, 
+        # nome (gerado com função que gera um nome aleatório de 8 bites), 
         # tipo de imagem
         # tamanho, que recebe a função getsizeof, que recebe o tamanho de outoput e retorna o tamanho dele mesmo
         # charset, se fosse um texto, poderia ser o UTF-8, mas como é imagem, não precisa, então None
@@ -207,7 +214,18 @@ def gerar_certificado(request, id):
     return redirect(reverse('eventos:certificados_evento', kwargs={'id':id}))
 
 
+def procurar_certificado(request, id):
+    evento = get_object_or_404(Evento,id=id)
+    if not evento.criador == request.user:
+        raise Http404('Esse evento não é seu')
 
-
+    email = request.POST.get('email')
+    # buscar pelo evento e pelo email que foi passado pelo POST, mostrando apenas o primeiro
+    certificado = Certificado.objects.filter(evento=evento).filter(participante__email=email).first()
+    if not certificado:
+        messages.add_message(request, constants.WARNING, 'Este certificado ainda não foi gerado')
+        return redirect(reverse('eventos:certificados_evento', kwargs={'id':id}))
+    else:
+        return redirect(certificado.certificado.url)
 
 

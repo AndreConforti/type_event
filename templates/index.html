@@ -1,0 +1,38 @@
+{% extends 'bases/base.html' %}
+{% load static %}
+{% block 'head' %}
+    <link href="{% static 'usuarios/css/usuarios.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block 'body' %}
+
+    <div class="container-fluid bg-inscricao">
+        
+        <div class="row">
+            <div class="col-md">
+                <h1 class="logo">Type.Event</h1>
+                <br>
+                <p>Projeto criado com o framework Django para uma empresa de gerenciamento de eventos. Nessa plataforma será possível:</p>
+                <ul>
+                    <li>fazer cadastro e login de usuários;</li>
+                    <li>cadastrar um novo evento;</li>
+                    <li>realizar a inscrição em um evento que já foi cadastrado;</li>
+                    <li>gerar certificados pra quem participou de algum evento;</li>                
+                </ul>
+                <br>
+                <h3>Vamos começar!</h3>
+                <br>
+                <a href="{%url 'usuarios:login' %}" class="btn-principal" style="text-decoration:none;">Login</a>
+
+                <img src="{% static 'geral/img/logo_evento.png' %}" class="logo-evento">
+
+            </div>
+
+            <div class="col-md bg-img">
+            
+            </div>
+        
+        </div>
+    </div>
+
+{% endblock %}

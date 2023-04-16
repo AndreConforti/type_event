@@ -12,7 +12,7 @@
 {% block 'body' %}
     <nav class="navbar navbar-expand-lg bg-body-tertiary navbar-color" data-bs-theme="dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Type.Event</a>
+            <a class="navbar-brand" href="{% url 'index' %}">Type.Event</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
@@ -34,9 +34,10 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="">Meus eventos</a></li>
-                        <li><a class="dropdown-item" href="">Meus certificados</a></li>
+                        <li><a class="dropdown-item" href="{% url 'cliente:meus_certificados' %}">Meus certificados</a></li>
                     </ul>
                 </li>
+                <a class="nav-link" href="{% url 'usuarios:sair' %}">Sair</a>
             </ul>
             </div>
         </div>

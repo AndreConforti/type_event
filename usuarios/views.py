@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.contrib import messages, auth
 from django.contrib.messages import constants
@@ -57,3 +58,8 @@ def login(request):
         
         auth.login(request, user)
         return redirect('/eventos/novo_evento/')
+    
+
+def sair(request):
+    logout(request)
+    return redirect(reverse('usuarios:login'))

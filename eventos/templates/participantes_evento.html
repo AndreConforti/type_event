@@ -45,7 +45,7 @@
                         <th>Nome</th>
                         <th>E-mail</th>
                     </tr>
-                    {% for participante in participantes %}
+                    {% for participante in paginas %}
                         <tr class="{% cycle 'linha' 'linha2' %}">
                             <td>{{participante.username}}</td>
                             <td>{{participante.email}}</td>
@@ -53,9 +53,22 @@
                     {% endfor %}       
                 </table>
                 <br>
+
+                <div class="pagination">
+                    {% if paginas.has_previous %}
+                        <a href="?page={{ paginas.previous_page_number }}"> < </a>
+                    {% endif %}
+                    {{ paginas.number }}
+                    {% if paginas.has_next %}
+                        <a href="?page={{ paginas.next_page_number }}"> > </a>
+                    {% endif %}
+                </div>
+                <br>
                 <div class="row">
                     <div class="col-md text-center">
-                        <p>X de Z</p>
+                        {% with total_participantes=evento.participantes.all.count %}
+                            <p>Participantes {{ paginas.start_index }} a {{ paginas.end_index }} de um total de {{ total_participantes }}</p>
+                        {% endwith %}
                     </div>
 
                     <div class="col-md ">
